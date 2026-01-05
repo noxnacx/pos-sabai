@@ -1,0 +1,83 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Product;
+use Illuminate\Http\Request;
+
+class ProductController extends Controller
+{
+    // ฟังก์ชันสำหรับดึงสินค้าทั้งหมด
+    public function index()
+    {
+        // สั่งให้ดึงสินค้าทั้งหมด + เอาข้อมูลหมวดหมู่มาด้วย (with category)
+        // และเอาเฉพาะตัวที่ is_active = true
+        $products = Product::with('category')
+                    ->where('is_active', true)
+                    ->get();
+
+        // ส่งกลับไปเป็น JSON (รูปแบบมาตรฐานของ API)
+        return response()->json([
+            'status' => 'success',
+            'count' => $products->count(),
+            'data' => $products
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    // 1. เพิ่มสินค้าใหม่ (พร้อมรูป)
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'price' => 'required|numeric',
+            'category_id' => 'required',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048' // ตรวจสอบไฟล์รูป
+        ]);
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            // บันทึกรูปไปที่โฟลเดอร์ public/storage/products
+            $imagePath = $request->file('image')->store('products', 'public');
+        }
+
+        $product = Product::create([
+            'name' => $request->name,
+            'price' => $request->price,
+            'category_id' => $request->category_id,
+            'image_url' => $imagePath ? '/storage/' . $imagePath : null, // เก็บ Path รูป
+            'is_active' => true
+        ]);
+
+        return response()->json(['message' => 'เพิ่มเมนูสำเร็จ', 'data' => $product]);
+    }
+
+    // 2. ลบสินค้า
+    public function destroy($id)
+    {
+        $product = Product::findOrFail($id);
+        $product->delete(); // ลบออกจาก DB (รูปยังอยู่ ถือว่าเก็บประวัติ)
+        return response()->json(['message' => 'ลบเมนูเรียบร้อย']);
+    }
+
+    // 3. ดึงหมวดหมู่ทั้งหมด (เอาไว้ใส่ใน Dropdown ตอนเพิ่มสินค้า)
+    public function getCategories()
+    {
+        return response()->json(\App\Models\Category::all());
+    }
+
+    public function update(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        // ถ้ามีการส่งรูปใหม่มา (เผื่ออนาคตอยากแก้รูปผ่านแอป)
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+            $product->image_url = '/storage/' . $imagePath;
+        }
+
+        // อัปเดตข้อมูลอื่นๆ (ชื่อ, ราคา, สถานะเปิด/ปิด)
+        $product->update($request->only(['name', 'price', 'category_id', 'is_active']));
+
+        return response()->json(['message' => 'อัปเดตสำเร็จ', 'data' => $product]);
+    }
+}
