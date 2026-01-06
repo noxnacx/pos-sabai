@@ -161,4 +161,43 @@ class OrderController extends Controller
 
         return response()->json($orders);
     }
+
+    public function updateItemQuantity(Request $request, $itemId)
+    {
+        $item = \App\Models\OrderItem::find($itemId);
+        if (!$item) return response()->json(['message' => 'ไม่พบรายการ'], 404);
+
+        $order = $item->order;
+
+        // 🔒 กฎเหล็ก: แก้ได้เฉพาะตอนสถานะเป็น pending เท่านั้น
+        if ($order->status !== 'pending') {
+            return response()->json(['message' => 'ไม่สามารถแก้ไขได้ ออเดอร์กำลังปรุงหรือเสร็จแล้ว'], 400);
+        }
+
+        $newQty = $request->quantity;
+
+        if ($newQty <= 0) {
+            // ถ้าจำนวนเป็น 0 หรือน้อยกว่า ให้ลบทิ้ง
+            $item->delete();
+        } else {
+            // อัปเดตจำนวน และคำนวณ subtotal ใหม่
+            $item->quantity = $newQty;
+            // สมมติว่า price เก็บราคาต่อหน่วยไว้ (ถ้าไม่มีต้องไปดึงจาก Product)
+            $item->subtotal = $item->price * $newQty;
+            $item->save();
+        }
+
+        // 🔄 คำนวณยอดรวมสุทธิของออเดอร์ใหม่ (Re-calculate Total)
+        $order->refresh(); // รีเฟรชข้อมูลความสัมพันธ์
+        if ($order->items->count() == 0) {
+            $order->delete(); // ถ้าไม่มีของเหลือเลย ให้ลบออเดอร์ทิ้ง (Option)
+            return response()->json(['message' => 'ออเดอร์ถูกยกเลิกแล้ว', 'deleted' => true]);
+        } else {
+            $newTotal = $order->items->sum('subtotal');
+            $order->total_amount = $newTotal;
+            $order->save();
+        }
+
+        return response()->json(['message' => 'อัปเดตเรียบร้อย', 'order' => $order]);
+    }
 }

@@ -14,9 +14,9 @@
         <div class="bg-white/90 backdrop-blur-md sticky top-0 z-40 shadow-sm border-b border-gray-100">
           <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
 
-            <button @click="openHistoryModal" class="btn btn-circle btn-ghost btn-sm bg-gray-100 hover:bg-gray-200 transition-colors">
+            <button @click="openHistoryModal" class="btn btn-circle btn-ghost btn-sm bg-gray-100 hover:bg-gray-200 transition-colors relative">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </button>
 
@@ -231,12 +231,32 @@
                         </div>
 
                         <div class="space-y-2">
-                            <div v-for="item in order.items" :key="item.id" class="flex justify-between text-sm items-center">
-                                <span class="text-gray-700 font-medium">{{ item.product_name }}</span>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">x{{ item.quantity }}</span>
-                                    <span class="text-gray-800 font-bold">฿{{ item.subtotal }}</span>
+                            <div v-for="item in order.items" :key="item.id" class="flex justify-between text-sm items-center bg-slate-50 p-2 rounded-lg">
+                                <span class="text-gray-700 font-medium flex-1">{{ item.product_name }}</span>
+
+                                <div v-if="order.status === 'pending'" class="flex items-center gap-3 bg-white border border-gray-200 rounded px-1 mx-2">
+                                    <button
+                                        @click="updateItemQty(item, item.quantity - 1)"
+                                        class="text-red-500 font-bold px-2 hover:bg-red-50 rounded"
+                                        :class="{'opacity-50 cursor-not-allowed': loading}"
+                                    >
+                                        {{ item.quantity === 1 ? '🗑️' : '-' }}
+                                    </button>
+                                    <span class="font-bold text-gray-800 w-4 text-center">{{ item.quantity }}</span>
+                                    <button
+                                        @click="updateItemQty(item, item.quantity + 1)"
+                                        class="text-green-600 font-bold px-2 hover:bg-green-50 rounded"
+                                        :class="{'opacity-50 cursor-not-allowed': loading}"
+                                    >
+                                        +
+                                    </button>
                                 </div>
+
+                                <div v-else class="flex items-center gap-2 mx-2">
+                                    <span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">x{{ item.quantity }}</span>
+                                </div>
+
+                                <div class="text-gray-800 font-bold">฿{{ item.subtotal }}</div>
                             </div>
                         </div>
 
@@ -262,7 +282,7 @@ import axios from 'axios';
 // --- Data ---
 const tableId = ref(null);
 const tableName = ref('');
-const isTableClosed = ref(true); // 🔒 เริ่มต้นให้ปิดไว้ก่อน จนกว่าจะเช็คผ่าน
+const isTableClosed = ref(true); // 🔒 เริ่มต้นให้ปิดไว้ก่อน
 const products = ref([]);
 const categories = ref([]);
 const cart = ref([]);
@@ -275,11 +295,11 @@ const selectedCategory = ref(0); // 0 = All
 const checkTableStatus = async () => {
     if (!tableId.value) return;
     try {
-        const res = await axios.get(`/api/tables/${tableId.value}`); // ต้องมี API นี้
+        const res = await axios.get(`/api/tables/${tableId.value}`);
         if (res.data.status === 'occupied') {
             isTableClosed.value = false; // ✅ เปิดให้เข้า
             tableName.value = res.data.name;
-            fetchData(); // โหลดข้อมูลอาหารต่อ
+            fetchData(); // โหลดข้อมูลอาหาร
         } else {
             isTableClosed.value = true; // 🚫 ปิด
         }
@@ -361,6 +381,20 @@ const submitOrder = async () => {
     } catch (e) { alert('Error sending order'); }
 };
 
+// ✨ ฟังก์ชันแก้ไขจำนวนสินค้าในออเดอร์ (เพิ่มใหม่)
+const updateItemQty = async (item, newQty) => {
+    if (newQty === 0 && !confirm(`ต้องการยกเลิกเมนู "${item.product_name}" ใช่ไหม?`)) return;
+
+    try {
+        // เรียก API ที่เราทำไว้ใน Backend
+        await axios.post(`/api/order-items/${item.id}/update`, { quantity: newQty });
+        fetchHistory(); // โหลดประวัติใหม่เพื่ออัปเดตยอดเงิน
+    } catch (e) {
+        alert(e.response?.data?.message || 'แก้ไขไม่ได้ (ออเดอร์อาจถูกรับไปแล้ว)');
+        fetchHistory(); // รีเฟรชสถานะให้ตรงความเป็นจริง
+    }
+}
+
 // --- Helpers ---
 const getStatusText = (status) => {
     const map = { pending: 'รอคิว 🕒', cooking: 'กำลังปรุง 🔥', ready: 'รอเสิร์ฟ 🛎️', served: 'เสิร์ฟแล้ว ✅', paid: 'ชำระแล้ว 💰' };
@@ -378,10 +412,9 @@ onMounted(() => {
         const idIndex = pathSegments.indexOf('table') + 1;
         if (pathSegments[idIndex]) {
             tableId.value = pathSegments[idIndex];
-            checkTableStatus(); // ✨ เช็คสถานะก่อนเริ่ม
+            checkTableStatus();
         }
     }
-    // ถ้าไม่มี tableId จะติดหน้า Block อัตโนมัติเพราะ isTableClosed = true
 });
 </script>
 
@@ -390,7 +423,6 @@ onMounted(() => {
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Animation ตอนตะกร้าเด้งขึ้นมา */
 @keyframes slide-up {
   from { transform: translateY(100%); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }

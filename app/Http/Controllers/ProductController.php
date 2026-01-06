@@ -115,4 +115,18 @@ class ProductController extends Controller
 
         return response()->json(['message' => 'ลบหมวดหมู่เรียบร้อย']);
     }
+
+    public function toggleStatus(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        // รับค่า is_active (0 หรือ 1)
+        $product->is_active = $request->is_active;
+        $product->save();
+
+        return response()->json([
+            'message' => 'อัปเดตสถานะเรียบร้อย',
+            'data' => $product
+        ]);
+    }
 }

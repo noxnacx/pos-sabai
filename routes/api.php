@@ -76,4 +76,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/reports/sales', [AdminController::class, 'getSalesChart']);
     Route::get('/admin/reports/products', [AdminController::class, 'getProductPerformance']);
 
+    // ✅ เพิ่ม Route เฉพาะสำหรับ เปิด/ปิด เมนู (ไม่ต้องส่งรูป/ชื่อ)
+    Route::post('/products/{id}/toggle-status', [ProductController::class, 'toggleStatus']);
+
+    // ✅ API สำหรับแก้ไขจำนวนสินค้าในออเดอร์ (เพิ่ม/ลด/ลบ)
+    Route::post('/order-items/{id}/update', [OrderController::class, 'updateItemQuantity']);
 });
