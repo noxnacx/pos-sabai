@@ -118,6 +118,12 @@ class OrderController extends Controller
             'is_paid' => true
         ]);
 
+        $table = Table::find($order->table_id);
+        if($table) {
+            $table->status = 'available';
+            $table->save();
+        }
+
         return response()->json(['message' => 'เช็คบิลเรียบร้อย ขอบคุณที่ใช้บริการ!']);
     }
 

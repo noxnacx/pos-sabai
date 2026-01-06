@@ -62,7 +62,19 @@ class ProductController extends Controller
     // 3. ดึงหมวดหมู่ทั้งหมด (เอาไว้ใส่ใน Dropdown ตอนเพิ่มสินค้า)
     public function getCategories()
     {
-        return response()->json(\App\Models\Category::all());
+        // เพิ่ม ->orderBy('sort_order', 'asc')
+        return \App\Models\Category::orderBy('sort_order', 'asc')->get();
+    }
+
+    public function reorderCategories(Request $request)
+    {
+        $categories = $request->categories; // รับ array ที่เรียงมาแล้วจาก frontend
+
+        foreach ($categories as $index => $cat) {
+            \App\Models\Category::where('id', $cat['id'])->update(['sort_order' => $index + 1]);
+        }
+
+        return response()->json(['message' => 'บันทึกลำดับเรียบร้อย']);
     }
 
     public function update(Request $request, $id)
@@ -88,5 +100,19 @@ class ProductController extends Controller
             'is_active' => true
         ]);
         return response()->json($category);
+    }
+
+    public function deleteCategory($id)
+    {
+        // เช็คว่ามีสินค้าใช้อยู่ไหม
+        $isInUse = Product::where('category_id', $id)->exists();
+        if ($isInUse) {
+            return response()->json(['message' => 'ไม่สามารถลบได้ เนื่องจากมีเมนูอาหารอยู่ในหมวดนี้'], 400);
+        }
+
+        $category = \App\Models\Category::findOrFail($id);
+        $category->delete();
+
+        return response()->json(['message' => 'ลบหมวดหมู่เรียบร้อย']);
     }
 }

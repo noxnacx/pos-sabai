@@ -13,7 +13,15 @@ class TableController extends Controller
         // เรียงตามชื่อ (หรือ id)
         return response()->json(Table::orderBy('id')->get());
     }
-
+    public function show($id)
+    {
+        $table = Table::find($id);
+        if (!$table) {
+            return response()->json(['message' => 'Table not found', 'status' => 'error'], 404);
+        }
+        // ส่งข้อมูลกลับไปให้ Frontend เช็ค status
+        return response()->json($table);
+    }
     // เพิ่มโต๊ะใหม่
     public function store(Request $request)
     {
@@ -57,4 +65,20 @@ class TableController extends Controller
         Table::destroy($id);
         return response()->json(['message' => 'ลบโต๊ะสำเร็จ']);
     }
+
+    public function openTable($id) {
+    $table = Table::findOrFail($id);
+    $table->status = 'occupied'; // เปลี่ยนสถานะเป็นไม่ว่าง
+    $table->save();
+    return response()->json(['message' => 'เปิดโต๊ะเรียบร้อย', 'data' => $table]);
+    }
+
+    // (Optional) เผื่อกดผิด อยากปิดเองด้วยมือ
+    public function closeTable($id) {
+        $table = Table::findOrFail($id);
+        $table->status = 'available'; // เปลี่ยนสถานะเป็นว่าง
+        $table->save();
+        return response()->json(['message' => 'ปิดโต๊ะเรียบร้อย', 'data' => $table]);
+    }
+
 }

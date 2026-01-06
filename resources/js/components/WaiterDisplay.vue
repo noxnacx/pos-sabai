@@ -1,174 +1,190 @@
 <template>
-  <div data-theme="emerald" class="min-h-screen bg-base-200 pb-20">
+  <div data-theme="emerald" class="min-h-screen bg-slate-100 pb-20">
 
-    <div class="navbar bg-base-100 shadow-md sticky top-0 z-50">
+    <div class="navbar bg-white shadow-sm sticky top-0 z-50 px-4 h-16">
       <div class="flex-1">
-        <a class="btn btn-ghost normal-case text-xl text-primary font-bold">
-          🤵 Waiter Station
+        <a class="btn btn-ghost normal-case text-xl text-slate-800 font-black gap-2">
+          <span class="text-3xl">🤵</span> Waiter Station
         </a>
       </div>
       <div class="flex-none gap-2">
-        <div class="badge badge-outline text-xs hidden sm:flex">Refresh: 5s</div>
+        <div class="badge badge-ghost text-xs hidden sm:flex text-slate-400 font-mono">Auto-Refresh: ON</div>
 
-        <button @click="logout" class="btn btn-ghost btn-sm text-error hover:bg-error hover:text-white" title="ออกจากระบบ">
+        <button @click="logout" class="btn btn-sm btn-ghost text-red-500 hover:bg-red-50" title="ออกจากระบบ">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 01-3-3h4a3 3 0 013 3v1" /></svg>
           <span class="hidden sm:inline">ออก</span>
         </button>
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-4 p-4">
-      <div class="stats shadow bg-white">
-        <div class="stat p-2 sm:p-4">
-          <div class="stat-figure text-secondary hidden sm:block">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <div class="p-4 max-w-7xl mx-auto">
+
+      <div class="grid grid-cols-2 gap-4 mb-6">
+
+        <button
+          @click="activeTab = 'ready'"
+          class="flex flex-col sm:flex-row items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 shadow-sm h-24 sm:h-20"
+          :class="activeTab === 'ready'
+            ? 'bg-red-500 border-red-500 text-white shadow-red-200 shadow-lg scale-[1.02]'
+            : 'bg-white border-slate-200 text-slate-400 hover:border-red-200 hover:text-red-400'"
+        >
+          <div class="relative">
+            <span class="text-3xl">🔔</span>
+            <span v-if="readyOrders.length > 0" class="absolute -top-2 -right-2 bg-white text-red-500 font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center shadow-sm border border-red-100">
+              {{ readyOrders.length }}
+            </span>
           </div>
-          <div class="stat-title text-xs sm:text-sm">รอเสิร์ฟ</div>
-          <div class="stat-value text-error text-2xl sm:text-4xl">{{ readyOrders.length }}</div>
-          <div class="stat-desc">รายการ</div>
+          <div class="flex flex-col items-center sm:items-start leading-tight">
+            <span class="text-lg font-bold">อาหารเสร็จ</span>
+            <span class="text-xs opacity-80 font-medium">รอเสิร์ฟ</span>
+          </div>
+        </button>
+
+        <button
+          @click="activeTab = 'served'"
+          class="flex flex-col sm:flex-row items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 shadow-sm h-24 sm:h-20"
+          :class="activeTab === 'served'
+            ? 'bg-emerald-500 border-emerald-500 text-white shadow-emerald-200 shadow-lg scale-[1.02]'
+            : 'bg-white border-slate-200 text-slate-400 hover:border-emerald-200 hover:text-emerald-400'"
+        >
+          <div class="relative">
+            <span class="text-3xl">💰</span>
+            <span v-if="servedOrders.length > 0" class="absolute -top-2 -right-2 bg-white text-emerald-500 font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center shadow-sm border border-emerald-100">
+              {{ servedOrders.length }}
+            </span>
+          </div>
+          <div class="flex flex-col items-center sm:items-start leading-tight">
+            <span class="text-lg font-bold">เช็คบิล</span>
+            <span class="text-xs opacity-80 font-medium">รอเก็บเงิน</span>
+          </div>
+        </button>
+
+      </div>
+
+      <div v-if="activeTab === 'ready'">
+        <div v-if="readyOrders.length === 0" class="flex flex-col items-center justify-center py-20 opacity-50">
+          <div class="text-8xl mb-4 grayscale">🍽️</div>
+          <div class="text-xl font-bold text-slate-400">ยังไม่มีอาหารเสร็จ</div>
+          <p class="text-slate-400">ว่างจัง... พักดื่มน้ำก่อนได้นะ</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div v-for="order in readyOrders" :key="order.id" class="card bg-white shadow-lg border-l-8 border-red-500 rounded-xl overflow-hidden hover:shadow-xl transition-shadow">
+            <div class="card-body p-5">
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                   <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+                     โต๊ะ {{ order.table?.name }}
+                   </h2>
+                   <p class="text-xs text-slate-400 font-mono">#{{ order.invoice_number }}</p>
+                </div>
+                <div class="badge badge-error text-white font-bold animate-pulse shadow-md">ด่วน</div>
+              </div>
+
+              <div class="divider my-1"></div>
+
+              <ul class="space-y-3 my-2">
+                <li v-for="item in order.items" :key="item.id" class="flex justify-between items-center bg-red-50 p-3 rounded-lg border border-red-100">
+                  <span class="text-slate-700 font-bold">{{ item.product_name }}</span>
+                  <span class="text-xl font-black text-red-500">x{{ item.quantity }}</span>
+                </li>
+              </ul>
+
+              <div class="card-actions mt-4">
+                <button
+                  @click="markServed(order.id)"
+                  class="btn bg-slate-200 hover:bg-slate-300 text-slate-700 border-none w-full text-lg shadow-sm"
+                >
+                  🏃‍♂️ นำไปเสิร์ฟ
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="stats shadow bg-white">
-        <div class="stat p-2 sm:p-4">
-          <div class="stat-figure text-secondary hidden sm:block">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+      <div v-if="activeTab === 'served'">
+        <div v-if="servedOrders.length === 0" class="flex flex-col items-center justify-center py-20 opacity-50">
+          <div class="text-8xl mb-4 grayscale">🍃</div>
+          <div class="text-xl font-bold text-slate-400">ไม่มีรายการรอเช็คบิล</div>
+          <p class="text-slate-400">ร้านโล่งจัง...</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div v-for="order in servedOrders" :key="order.id" class="card bg-white shadow-lg border border-slate-200 rounded-xl overflow-hidden hover:shadow-xl transition-shadow">
+            <div class="bg-emerald-50 px-5 py-3 border-b border-emerald-100 flex justify-between items-center">
+               <h2 class="text-xl font-bold text-emerald-800">โต๊ะ {{ order.table?.name }}</h2>
+               <div class="badge bg-white text-emerald-600 border-none font-bold shadow-sm">กำลังทาน</div>
+            </div>
+
+            <div class="card-body p-5 text-center">
+               <div class="py-4">
+                  <span class="text-sm text-slate-400 uppercase tracking-wide">ยอดสุทธิ</span>
+                  <div class="text-5xl font-black text-emerald-600 mt-1">฿{{ Number(order.total_amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}</div>
+                  <div class="text-sm text-slate-400 mt-2 font-medium bg-slate-100 inline-block px-3 py-1 rounded-full">{{ order.items.length }} รายการ</div>
+               </div>
+
+               <div class="flex flex-col gap-3 mt-2">
+                 <button @click="generateQR(order)" class="btn bg-blue-600 hover:bg-blue-700 text-white w-full text-lg shadow-md shadow-blue-100 border-none h-12">
+                   📲 สแกนจ่าย (PromptPay)
+                 </button>
+
+                 <button @click="checkout(order)" class="btn bg-emerald-600 hover:bg-emerald-700 text-white w-full text-lg shadow-md shadow-emerald-100 border-none h-12">
+                   💵 รับเงินสด / ปิดโต๊ะ
+                 </button>
+               </div>
+            </div>
           </div>
-          <div class="stat-title text-xs sm:text-sm">กำลังทาน</div>
-          <div class="stat-value text-success text-2xl sm:text-4xl">{{ servedOrders.length }}</div>
-          <div class="stat-desc">โต๊ะ</div>
         </div>
       </div>
+
     </div>
 
-    <div class="p-4 pt-0">
-      <div role="tablist" class="tabs tabs-boxed mb-4 bg-white">
-        <a role="tab" :class="['tab', activeTab === 'ready' ? 'tab-active bg-error text-white' : '']" @click="activeTab = 'ready'">
-          🔔 อาหารเสร็จ ({{ readyOrders.length }})
-        </a>
-        <a role="tab" :class="['tab', activeTab === 'served' ? 'tab-active bg-success text-white' : '']" @click="activeTab = 'served'">
-          💰 เช็คบิล ({{ servedOrders.length }})
-        </a>
-      </div>
+    <dialog id="qr_modal" class="modal backdrop-blur-sm">
+      <div class="modal-box text-center bg-white border-t-8 border-blue-500 shadow-2xl">
+        <h3 class="font-bold text-2xl mb-2 text-slate-800">📲 สแกนจ่ายเงิน</h3>
+        <p class="text-slate-500 mb-6">โต๊ะ: <span class="font-bold text-blue-600 text-lg">{{ currentQRTable }}</span></p>
 
-      <div v-if="activeTab === 'ready'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div v-if="readyOrders.length === 0" class="col-span-full text-center py-10 opacity-50">
-          <div class="text-6xl mb-2">✅</div>
-          <div>เสิร์ฟครบหมดแล้ว! เก่งมาก</div>
-        </div>
-
-        <div v-for="order in readyOrders" :key="order.id" class="card bg-base-100 shadow-xl border-l-4 border-error">
-          <div class="card-body p-4">
-            <h2 class="card-title justify-between">
-              โต๊ะ {{ order.table?.name }}
-              <div class="badge badge-error text-white animate-pulse">ด่วน</div>
-            </h2>
-            <p class="text-xs text-gray-500 mb-2">ออเดอร์ #{{ order.invoice_number }}</p>
-
-            <ul class="menu bg-base-200 rounded-box p-2 mb-4 text-sm">
-              <li v-for="item in order.items" :key="item.id">
-                <a class="flex justify-between cursor-default hover:bg-transparent">
-                  <span>{{ item.product_name }}</span>
-                  <span class="font-bold">x{{ item.quantity }}</span>
-                </a>
-              </li>
-            </ul>
-
-            <div class="card-actions justify-end">
-              <button
-                @click="markServed(order.id)"
-                class="btn bg-gray-200 hover:bg-gray-300 text-slate-800 border-none w-full shadow-sm"
-              >
-                🏃‍♂️ นำไปเสิร์ฟ
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="activeTab === 'served'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div v-if="servedOrders.length === 0" class="col-span-full text-center py-10 opacity-50">
-          <div class="text-6xl mb-2">🍃</div>
-          <div>ร้านว่าง... ยังไม่มีลูกค้า</div>
-        </div>
-
-        <div v-for="order in servedOrders" :key="order.id" class="card bg-white shadow-xl border border-slate-100">
-          <div class="card-body p-5">
-            <h2 class="card-title justify-between items-center pb-2 border-b border-slate-100">
-              <span class="text-slate-700">โต๊ะ {{ order.table?.name }}</span>
-              <div class="badge badge-success text-white">ทานอยู่</div>
-            </h2>
-
-            <div class="py-6 text-center">
-               <span class="text-sm text-gray-500 block mb-1">ยอดสุทธิ</span>
-               <span class="text-4xl font-black text-emerald-600">฿{{ Number(order.total_amount).toLocaleString() }}</span>
-               <div class="text-xs text-gray-400 mt-2">({{ order.items.length }} รายการ)</div>
-            </div>
-
-            <div class="card-actions flex flex-col gap-3">
-              <button @click="generateQR(order)" class="btn bg-blue-600 hover:bg-blue-700 text-white w-full text-lg shadow-md border-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
-                สแกนจ่าย (PromptPay)
-              </button>
-
-              <button @click="checkout(order.id)" class="btn bg-emerald-600 hover:bg-emerald-700 text-white w-full text-lg shadow-md border-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                รับเงินสด / ปิดโต๊ะ
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <dialog id="qr_modal" class="modal">
-      <div class="modal-box text-center bg-white">
-        <h3 class="font-bold text-xl mb-2 text-slate-800">📲 สแกนจ่ายเงิน (PromptPay)</h3>
-        <p class="text-sm text-gray-500 mb-4">ร้านค้า: POS System ({{ currentQRTable }})</p>
-
-        <div class="bg-white p-4 inline-block rounded-xl shadow-inner border border-slate-200 mb-4">
+        <div class="bg-white p-4 inline-block rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.1)] border border-slate-100 mb-6">
            <img :src="qrCodeUrl" alt="QR Code" class="w-64 h-64 mx-auto object-contain bg-white">
         </div>
 
-        <div class="text-3xl font-black text-emerald-600 mb-2">฿{{ Number(currentQRTotal).toLocaleString() }}</div>
-        <p class="text-xs text-red-500 mb-6">*กรุณาตรวจสอบสลิปเงินเข้าก่อนกดปิดโต๊ะ</p>
+        <div class="text-4xl font-black text-blue-600 mb-2">฿{{ Number(currentQRTotal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}</div>
+        <p class="text-xs text-red-400 mb-8">*กรุณาตรวจสอบสลิปเงินเข้าก่อนกดปิดโต๊ะ</p>
 
-        <div class="modal-action flex justify-between gap-2 px-2">
-          <form method="dialog" class="w-1/3">
-            <button class="btn bg-gray-200 hover:bg-gray-300 text-slate-800 w-full border-none">ยกเลิก</button>
+        <div class="flex gap-3">
+          <form method="dialog" class="flex-1">
+            <button class="btn btn-outline border-slate-300 text-slate-500 hover:bg-slate-100 hover:text-slate-700 w-full">ยกเลิก</button>
           </form>
-          <button @click="confirmQRPayment" class="btn bg-green-600 hover:bg-green-700 text-white w-2/3 border-none text-lg">
-             ✅ ได้รับเงินแล้ว
+          <button @click="confirmQRPayment" class="btn bg-blue-600 hover:bg-blue-700 text-white border-none flex-1 shadow-lg shadow-blue-200">
+             ✅ เงินเข้าแล้ว
           </button>
         </div>
       </div>
-      <form method="dialog" class="modal-backdrop bg-black/50"><button>close</button></form>
+      <form method="dialog" class="modal-backdrop bg-slate-900/50"><button>close</button></form>
     </dialog>
 
     <dialog id="notification_modal" class="modal modal-bottom sm:modal-middle">
-      <div class="modal-box bg-white border-l-8 border-green-500">
-        <div class="text-center py-4">
-          <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4 animate-bounce">
-            <svg class="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
+      <div class="modal-box bg-white border-t-8 border-emerald-500 shadow-2xl p-8">
+        <div class="text-center">
+          <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-emerald-50 mb-6 animate-bounce">
+            <span class="text-4xl">🛎️</span>
           </div>
-          <h3 class="text-2xl font-bold text-gray-900 mb-1">อาหารเสร็จแล้ว! 🛎️</h3>
-          <p class="text-lg text-gray-600">
-            โต๊ะ <span class="text-3xl font-black text-green-600">{{ latestReadyOrder?.table?.name }}</span>
+          <h3 class="text-2xl font-black text-slate-800 mb-2">อาหารเสร็จแล้ว!</h3>
+          <p class="text-lg text-slate-600 mb-6">
+            โต๊ะ <span class="text-4xl font-black text-emerald-600 block mt-2">{{ latestReadyOrder?.table?.name }}</span>
           </p>
-          <p class="text-sm text-gray-400 mt-2">กรุณานำอาหารไปเสิร์ฟ</p>
+          <p class="text-sm text-slate-400 mb-8">กรุณานำอาหารไปเสิร์ฟให้ลูกค้า</p>
         </div>
-        <div class="modal-action justify-center">
-          <form method="dialog">
-            <button class="btn btn-success text-white w-48 text-lg shadow-lg shadow-green-200">
+        <div class="modal-action justify-center w-full">
+          <form method="dialog" class="w-full">
+            <button class="btn bg-emerald-600 hover:bg-emerald-700 text-white w-full text-xl h-14 border-none shadow-lg shadow-emerald-200 rounded-xl">
               รับทราบ 👌
             </button>
           </form>
         </div>
       </div>
-      <form method="dialog" class="modal-backdrop bg-black/60"><button>close</button></form>
+      <form method="dialog" class="modal-backdrop bg-slate-900/60"><button>close</button></form>
     </dialog>
 
     <div id="receipt-area">
@@ -184,15 +200,27 @@
           <p style="margin: 0;">วันที่: {{ new Date().toLocaleString('th-TH') }}</p>
         </div>
         <div class="line"></div>
-        <table style="width: 100%;">
+
+        <table style="width: 100%; border-collapse: collapse;">
           <tr v-for="item in printingOrder.items" :key="item.id">
-            <td style="vertical-align: top;">{{ item.product_name }}<br>x{{ item.quantity }}</td>
-            <td class="text-right" style="vertical-align: top;">{{ item.subtotal }}</td>
+            <td style="vertical-align: top; padding-bottom: 5px;">
+                <span style="font-weight: bold;">{{ item.product_name }}</span>
+                <br>
+                <span style="font-size: 10px; color: #555; padding-left: 5px;">
+                    {{ item.quantity }} x {{ Number(item.subtotal / item.quantity).toFixed(2) }}
+                </span>
+            </td>
+            <td class="text-right" style="vertical-align: top;">
+                {{ Number(item.subtotal).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}
+            </td>
           </tr>
         </table>
+
         <div class="line"></div>
         <div class="text-right">
-          <p class="bold" style="font-size: 16px; margin: 0;">ยอดรวม: {{ printingOrder.total_amount }}.-</p>
+          <p class="bold" style="font-size: 18px; margin: 5px 0;">
+            ยอดรวม: {{ Number(printingOrder.total_amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}
+          </p>
         </div>
         <div class="line"></div>
         <div class="text-center" style="margin-top: 10px;">
@@ -208,47 +236,42 @@
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import axios from 'axios';
 
-// ✏️ แก้ไขเลข PromptPay (เบอร์โทร/เลขบัตร ปชช)
-const shopPromptPayId = "0812345678";
+// ✏️ แก้ไขเลข PromptPay
+const shopPromptPayId = "0924120111";
 
 const orders = ref([]);
 const activeTab = ref('ready');
 const printingOrder = ref(null);
 const currentQRTotal = ref(0);
 const currentQRTable = ref('');
-const currentOrderId = ref(null);
+const currentGroupedOrder = ref(null);
 const qrCodeUrl = ref('');
 let intervalId = null;
 
-// --- ระบบแจ้งเตือน ---
+// --- Notification ---
 const latestReadyOrder = ref(null);
-const alertedOrderIds = ref(new Set()); // กันเตือนซ้ำ
+const alertedOrderIds = ref(new Set());
 
-// 🔊 ฟังก์ชันเล่นเสียง
 const playNotificationSound = () => {
   const audio = new Audio('https://freesound.org/data/previews/320/320655_5260872-lq.mp3');
   audio.volume = 0.5;
-  audio.play().catch(e => console.log('Click to enable audio first'));
+  audio.play().catch(e => console.log('Audio blocked'));
 }
 
 const fetchOrders = async () => {
     try {
         const response = await axios.get('/api/waiter/orders');
         orders.value = response.data;
-        checkNewReadyOrders(); // ✨ เช็คของใหม่
+        checkNewReadyOrders();
     } catch (e) { console.error(e); }
 }
 
-// ✨ เช็คออเดอร์ใหม่เพื่อแจ้งเตือน
 const checkNewReadyOrders = () => {
     const readyItems = orders.value.filter(o => o.status === 'ready');
-
     readyItems.forEach(order => {
         if (!alertedOrderIds.value.has(order.id)) {
             alertedOrderIds.value.add(order.id);
             latestReadyOrder.value = order;
-
-            // เปิด Popup + เล่นเสียง
             const modal = document.getElementById('notification_modal');
             if (modal) {
                 modal.showModal();
@@ -259,7 +282,48 @@ const checkNewReadyOrders = () => {
 }
 
 const readyOrders = computed(() => orders.value.filter(o => o.status === 'ready'));
-const servedOrders = computed(() => orders.value.filter(o => o.status === 'served'));
+
+// 🟢 Served Logic (Merged Bills) - ✨ แก้ไขการบวกเลขทศนิยมแล้ว
+const servedOrders = computed(() => {
+    const rawServed = orders.value.filter(o => o.status === 'served');
+    const groupedMap = new Map();
+
+    rawServed.forEach(order => {
+        const tableId = order.table_id;
+        if (!groupedMap.has(tableId)) {
+            groupedMap.set(tableId, {
+                id: 'merged_' + tableId,
+                table: order.table,
+                table_id: tableId,
+                invoice_number: order.invoice_number,
+                created_at: order.created_at,
+                total_amount: 0,
+                items: [],
+                original_order_ids: []
+            });
+        }
+        const group = groupedMap.get(tableId);
+
+        // ⚠️ ใช้ parseFloat เพื่อกัน String Concatenation
+        group.total_amount += parseFloat(order.total_amount);
+        group.original_order_ids.push(order.id);
+
+        order.items.forEach(item => {
+            const existingItem = group.items.find(i => i.product_id === item.product_id);
+            // ⚠️ ใช้ parseFloat กับ subtotal ด้วย
+            const itemSubtotal = parseFloat(item.subtotal || 0);
+
+            if (existingItem) {
+                existingItem.quantity += item.quantity;
+                existingItem.subtotal += itemSubtotal;
+            } else {
+                // สร้าง object ใหม่ เพื่อไม่ให้ค่าทับกับ pointer เดิม และ set subtotal เป็น number
+                group.items.push({ ...item, subtotal: itemSubtotal });
+            }
+        });
+    });
+    return Array.from(groupedMap.values());
+});
 
 const markServed = async (orderId) => {
     try {
@@ -268,35 +332,40 @@ const markServed = async (orderId) => {
     } catch (e) { alert('Error'); }
 }
 
-const generateQR = (order) => {
-    currentQRTotal.value = order.total_amount;
-    currentQRTable.value = order.table?.name;
-    currentOrderId.value = order.id;
-    qrCodeUrl.value = `https://promptpay.io/${shopPromptPayId}/${order.total_amount}.png`;
+const generateQR = (groupedOrder) => {
+    currentQRTotal.value = groupedOrder.total_amount;
+    currentQRTable.value = groupedOrder.table?.name;
+    currentGroupedOrder.value = groupedOrder;
+    qrCodeUrl.value = `https://promptpay.io/${shopPromptPayId}/${groupedOrder.total_amount}.png`;
     document.getElementById('qr_modal').showModal();
 }
 
 const confirmQRPayment = async () => {
     document.getElementById('qr_modal').close();
-    await checkout(currentOrderId.value);
+    await checkout(currentGroupedOrder.value);
 }
 
-const printReceipt = async (order) => {
-    printingOrder.value = order;
+const printReceipt = async (groupedOrder) => {
+    printingOrder.value = groupedOrder;
     await nextTick();
     window.print();
 }
 
-const checkout = async (orderId) => {
-    const orderToPrint = orders.value.find(o => o.id === orderId);
+const checkout = async (groupedOrder) => {
     if(!document.getElementById('qr_modal').open) {
-       if(!confirm('ยืนยันรับเงินและปิดโต๊ะ?')) return;
+       if(!confirm(`ยืนยันปิดโต๊ะ ${groupedOrder.table?.name} ยอดรวม ฿${groupedOrder.total_amount.toLocaleString()}?`)) return;
     }
     try {
-        await printReceipt(orderToPrint);
-        await axios.post(`/api/orders/${orderId}/checkout`);
+        await printReceipt(groupedOrder);
+        const promises = groupedOrder.original_order_ids.map(id =>
+            axios.post(`/api/orders/${id}/checkout`)
+        );
+        await Promise.all(promises);
         fetchOrders();
-    } catch (e) { alert('Error'); }
+    } catch (e) {
+        console.error(e);
+        alert('เกิดข้อผิดพลาดในการปิดบิล');
+    }
 }
 
 const logout = async () => {
@@ -304,9 +373,7 @@ const logout = async () => {
   try {
     await axios.post('/logout');
     window.location.href = '/login';
-  } catch (e) {
-    alert('Logout failed');
-  }
+  } catch (e) { alert('Logout failed'); }
 }
 
 onMounted(() => {

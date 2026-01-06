@@ -26,8 +26,8 @@
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-bold text-slate-800">ยอดขายรวม (Sales Revenue)</h2>
                     <div class="join">
-                        <button @click="loadSales('daily')" :class="['btn btn-sm join-item', period === 'daily' ? 'btn-active btn-primary' : '']">รายวัน</button>
-                        <button @click="loadSales('monthly')" :class="['btn btn-sm join-item', period === 'monthly' ? 'btn-active btn-primary' : '']">รายเดือน</button>
+                        <button @click="loadSales('daily')" :class="['btn btn-sm join-item', period === 'daily' ? 'btn-active btn-primary' : '']">รายวัน  | </button>
+                        <button @click="loadSales('monthly')" :class="['btn btn-sm join-item', period === 'monthly' ? 'btn-active btn-primary' : '']"> | รายเดือน</button>
                     </div>
                 </div>
 
