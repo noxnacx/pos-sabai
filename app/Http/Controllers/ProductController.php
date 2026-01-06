@@ -31,12 +31,11 @@ class ProductController extends Controller
             'name' => 'required',
             'price' => 'required|numeric',
             'category_id' => 'required',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048' // ตรวจสอบไฟล์รูป
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            // บันทึกรูปไปที่โฟลเดอร์ public/storage/products
             $imagePath = $request->file('image')->store('products', 'public');
         }
 
@@ -44,7 +43,8 @@ class ProductController extends Controller
             'name' => $request->name,
             'price' => $request->price,
             'category_id' => $request->category_id,
-            'image_url' => $imagePath ? '/storage/' . $imagePath : null, // เก็บ Path รูป
+            'description' => $request->description, // ✅ เพิ่มบรรทัดนี้
+            'image_url' => $imagePath ? '/storage/' . $imagePath : null,
             'is_active' => true
         ]);
 
@@ -69,15 +69,24 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        // ถ้ามีการส่งรูปใหม่มา (เผื่ออนาคตอยากแก้รูปผ่านแอป)
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
             $product->image_url = '/storage/' . $imagePath;
         }
 
-        // อัปเดตข้อมูลอื่นๆ (ชื่อ, ราคา, สถานะเปิด/ปิด)
-        $product->update($request->only(['name', 'price', 'category_id', 'is_active']));
+        // ✅ เพิ่ม description ในการอัปเดต
+        $product->update($request->only(['name', 'price', 'category_id', 'is_active', 'description']));
 
         return response()->json(['message' => 'อัปเดตสำเร็จ', 'data' => $product]);
+    }
+
+    public function createCategory(Request $request)
+    {
+        $request->validate(['name' => 'required|unique:categories']);
+        $category = \App\Models\Category::create([
+            'name' => $request->name,
+            'is_active' => true
+        ]);
+        return response()->json($category);
     }
 }

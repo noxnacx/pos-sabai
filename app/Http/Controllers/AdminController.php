@@ -133,7 +133,7 @@ class AdminController extends Controller
     // รายงานสินค้าขายดี / ขายไม่ดี (Product Performance)
     public function getProductPerformance()
     {
-        // ขายดี (Top 10)
+        // 1. ขายดี (Top 10) - Logic เดิม (ดึงจากยอดขายจริง)
         $bestSellers = DB::table('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->where('orders.status', 'paid')
@@ -143,13 +143,21 @@ class AdminController extends Controller
             ->limit(10)
             ->get();
 
-        // ขายไม่ดี (Bottom 10)
-        $lowSellers = DB::table('order_items')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->where('orders.status', 'paid')
-            ->select('product_name', DB::raw('SUM(quantity) as total_qty'))
-            ->groupBy('product_name')
-            ->orderBy('total_qty', 'asc')
+        // 2. ขายไม่ดี / ควรปรับปรุง (Bottom 10) - ✅ แก้ไขใหม่
+        // เปลี่ยนมาดึงจาก Products เป็นหลัก เพื่อให้สินค้าที่ยอดขาย 0 ติดมาด้วย
+        $lowSellers = DB::table('products')
+            ->leftJoin('order_items', 'products.id', '=', 'order_items.product_id')
+            ->leftJoin('orders', function($join) {
+                $join->on('order_items.order_id', '=', 'orders.id')
+                     ->where('orders.status', 'paid'); // นับเฉพาะที่จ่ายเงินแล้ว
+            })
+            ->where('products.is_active', true) // เอาเฉพาะสินค้าที่ยังขายอยู่ (Active)
+            ->select(
+                'products.name as product_name',
+                DB::raw('COALESCE(SUM(order_items.quantity), 0) as total_qty') // ถ้าไม่มีออเดอร์ ให้เป็น 0
+            )
+            ->groupBy('products.id', 'products.name')
+            ->orderBy('total_qty', 'asc') // เรียงจากน้อยไปมาก (0 จะขึ้นก่อน)
             ->limit(10)
             ->get();
 

@@ -71,4 +71,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/reports/sales', [AdminController::class, 'getSalesChart']);
     Route::get('/admin/reports/products', [AdminController::class, 'getProductPerformance']);
 
+    Route::post('/admin/categories', [ProductController::class, 'createCategory']);
 });

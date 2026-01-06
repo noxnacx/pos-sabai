@@ -14,7 +14,6 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 01-3-3h4a3 3 0 013 3v1" /></svg>
           <span class="hidden sm:inline">ออก</span>
         </button>
-
       </div>
     </div>
 
@@ -76,7 +75,10 @@
             </ul>
 
             <div class="card-actions justify-end">
-              <button @click="markServed(order.id)" class="btn btn-error text-white w-full">
+              <button
+                @click="markServed(order.id)"
+                class="btn bg-gray-200 hover:bg-gray-300 text-slate-800 border-none w-full shadow-sm"
+              >
                 🏃‍♂️ นำไปเสิร์ฟ
               </button>
             </div>
@@ -90,23 +92,28 @@
           <div>ร้านว่าง... ยังไม่มีลูกค้า</div>
         </div>
 
-        <div v-for="order in servedOrders" :key="order.id" class="card bg-base-100 shadow-xl border-l-4 border-success">
-          <div class="card-body p-4">
-            <h2 class="card-title justify-between">
-              โต๊ะ {{ order.table?.name }}
-              <div class="badge badge-success text-white">Active</div>
+        <div v-for="order in servedOrders" :key="order.id" class="card bg-white shadow-xl border border-slate-100">
+          <div class="card-body p-5">
+            <h2 class="card-title justify-between items-center pb-2 border-b border-slate-100">
+              <span class="text-slate-700">โต๊ะ {{ order.table?.name }}</span>
+              <div class="badge badge-success text-white">ทานอยู่</div>
             </h2>
-            <div class="flex justify-between items-end my-4 border-b pb-2">
-               <span class="text-sm">ยอดรวม</span>
-               <span class="text-3xl font-bold text-success">฿{{ order.total_amount }}</span>
+
+            <div class="py-6 text-center">
+               <span class="text-sm text-gray-500 block mb-1">ยอดสุทธิ</span>
+               <span class="text-4xl font-black text-emerald-600">฿{{ Number(order.total_amount).toLocaleString() }}</span>
+               <div class="text-xs text-gray-400 mt-2">({{ order.items.length }} รายการ)</div>
             </div>
 
-            <div class="card-actions grid grid-cols-2 gap-2">
-              <button @click="generateQR(order)" class="btn btn-outline btn-info btn-sm">
-                📲 QR รับเงิน
+            <div class="card-actions flex flex-col gap-3">
+              <button @click="generateQR(order)" class="btn bg-blue-600 hover:bg-blue-700 text-white w-full text-lg shadow-md border-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
+                สแกนจ่าย (PromptPay)
               </button>
-              <button @click="checkout(order.id)" class="btn btn-success text-white btn-sm">
-                💵 เงินสด/ปิดโต๊ะ
+
+              <button @click="checkout(order.id)" class="btn bg-emerald-600 hover:bg-emerald-700 text-white w-full text-lg shadow-md border-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                รับเงินสด / ปิดโต๊ะ
               </button>
             </div>
           </div>
@@ -116,22 +123,52 @@
     </div>
 
     <dialog id="qr_modal" class="modal">
-      <div class="modal-box text-center">
-        <h3 class="font-bold text-lg mb-4">📲 สแกนจ่ายเงิน (PromptPay)</h3>
+      <div class="modal-box text-center bg-white">
+        <h3 class="font-bold text-xl mb-2 text-slate-800">📲 สแกนจ่ายเงิน (PromptPay)</h3>
+        <p class="text-sm text-gray-500 mb-4">ร้านค้า: POS System ({{ currentQRTable }})</p>
 
-        <div class="bg-white p-4 inline-block rounded-lg shadow-inner mb-4 border">
-           <img src="https://via.placeholder.com/200?text=QR+Code" alt="QR Code" class="w-48 h-48 mx-auto">
+        <div class="bg-white p-4 inline-block rounded-xl shadow-inner border border-slate-200 mb-4">
+           <img :src="qrCodeUrl" alt="QR Code" class="w-64 h-64 mx-auto object-contain bg-white">
         </div>
 
-        <div class="text-2xl font-bold text-primary mb-2">฿{{ currentQRTotal }}</div>
-        <p class="text-sm text-gray-500">โต๊ะ {{ currentQRTable }}</p>
+        <div class="text-3xl font-black text-emerald-600 mb-2">฿{{ Number(currentQRTotal).toLocaleString() }}</div>
+        <p class="text-xs text-red-500 mb-6">*กรุณาตรวจสอบสลิปเงินเข้าก่อนกดปิดโต๊ะ</p>
 
+        <div class="modal-action flex justify-between gap-2 px-2">
+          <form method="dialog" class="w-1/3">
+            <button class="btn bg-gray-200 hover:bg-gray-300 text-slate-800 w-full border-none">ยกเลิก</button>
+          </form>
+          <button @click="confirmQRPayment" class="btn bg-green-600 hover:bg-green-700 text-white w-2/3 border-none text-lg">
+             ✅ ได้รับเงินแล้ว
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop bg-black/50"><button>close</button></form>
+    </dialog>
+
+    <dialog id="notification_modal" class="modal modal-bottom sm:modal-middle">
+      <div class="modal-box bg-white border-l-8 border-green-500">
+        <div class="text-center py-4">
+          <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4 animate-bounce">
+            <svg class="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-1">อาหารเสร็จแล้ว! 🛎️</h3>
+          <p class="text-lg text-gray-600">
+            โต๊ะ <span class="text-3xl font-black text-green-600">{{ latestReadyOrder?.table?.name }}</span>
+          </p>
+          <p class="text-sm text-gray-400 mt-2">กรุณานำอาหารไปเสิร์ฟ</p>
+        </div>
         <div class="modal-action justify-center">
           <form method="dialog">
-            <button class="btn btn-wide">ปิดหน้าต่าง</button>
+            <button class="btn btn-success text-white w-48 text-lg shadow-lg shadow-green-200">
+              รับทราบ 👌
+            </button>
           </form>
         </div>
       </div>
+      <form method="dialog" class="modal-backdrop bg-black/60"><button>close</button></form>
     </dialog>
 
     <div id="receipt-area">
@@ -171,25 +208,59 @@
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import axios from 'axios';
 
+// ✏️ แก้ไขเลข PromptPay (เบอร์โทร/เลขบัตร ปชช)
+const shopPromptPayId = "0812345678";
+
 const orders = ref([]);
-const activeTab = ref('ready'); // 'ready' or 'served'
+const activeTab = ref('ready');
 const printingOrder = ref(null);
 const currentQRTotal = ref(0);
 const currentQRTable = ref('');
+const currentOrderId = ref(null);
+const qrCodeUrl = ref('');
 let intervalId = null;
 
-// --- Data Fetching ---
+// --- ระบบแจ้งเตือน ---
+const latestReadyOrder = ref(null);
+const alertedOrderIds = ref(new Set()); // กันเตือนซ้ำ
+
+// 🔊 ฟังก์ชันเล่นเสียง
+const playNotificationSound = () => {
+  const audio = new Audio('https://freesound.org/data/previews/320/320655_5260872-lq.mp3');
+  audio.volume = 0.5;
+  audio.play().catch(e => console.log('Click to enable audio first'));
+}
+
 const fetchOrders = async () => {
     try {
         const response = await axios.get('/api/waiter/orders');
         orders.value = response.data;
+        checkNewReadyOrders(); // ✨ เช็คของใหม่
     } catch (e) { console.error(e); }
+}
+
+// ✨ เช็คออเดอร์ใหม่เพื่อแจ้งเตือน
+const checkNewReadyOrders = () => {
+    const readyItems = orders.value.filter(o => o.status === 'ready');
+
+    readyItems.forEach(order => {
+        if (!alertedOrderIds.value.has(order.id)) {
+            alertedOrderIds.value.add(order.id);
+            latestReadyOrder.value = order;
+
+            // เปิด Popup + เล่นเสียง
+            const modal = document.getElementById('notification_modal');
+            if (modal) {
+                modal.showModal();
+                playNotificationSound();
+            }
+        }
+    });
 }
 
 const readyOrders = computed(() => orders.value.filter(o => o.status === 'ready'));
 const servedOrders = computed(() => orders.value.filter(o => o.status === 'served'));
 
-// --- Actions ---
 const markServed = async (orderId) => {
     try {
         await axios.post(`/api/orders/${orderId}/status`, { status: 'served' });
@@ -200,10 +271,16 @@ const markServed = async (orderId) => {
 const generateQR = (order) => {
     currentQRTotal.value = order.total_amount;
     currentQRTable.value = order.table?.name;
+    currentOrderId.value = order.id;
+    qrCodeUrl.value = `https://promptpay.io/${shopPromptPayId}/${order.total_amount}.png`;
     document.getElementById('qr_modal').showModal();
 }
 
-// Print & Checkout Logic
+const confirmQRPayment = async () => {
+    document.getElementById('qr_modal').close();
+    await checkout(currentOrderId.value);
+}
+
 const printReceipt = async (order) => {
     printingOrder.value = order;
     await nextTick();
@@ -212,18 +289,18 @@ const printReceipt = async (order) => {
 
 const checkout = async (orderId) => {
     const orderToPrint = orders.value.find(o => o.id === orderId);
-    if(!confirm('ยืนยันปิดโต๊ะและรับเงิน?')) return;
-
+    if(!document.getElementById('qr_modal').open) {
+       if(!confirm('ยืนยันรับเงินและปิดโต๊ะ?')) return;
+    }
     try {
-        await printReceipt(orderToPrint); // พิมพ์ก่อน
-        await axios.post(`/api/orders/${orderId}/checkout`); // แล้วค่อยปิดงาน
+        await printReceipt(orderToPrint);
+        await axios.post(`/api/orders/${orderId}/checkout`);
         fetchOrders();
     } catch (e) { alert('Error'); }
 }
 
-// --- โซน Logout (เพิ่มใหม่) ---
 const logout = async () => {
-  if(!confirm('ยืนยันออกจากระบบ?')) return;
+  if(!confirm('⚠️ คุณแน่ใจหรือไม่ว่าจะออกจากระบบ?')) return;
   try {
     await axios.post('/logout');
     window.location.href = '/login';
@@ -241,7 +318,6 @@ onUnmounted(() => clearInterval(intervalId));
 </script>
 
 <style>
-/* CSS ใบเสร็จเหมือนเดิมเป๊ะ */
 #receipt-area { display: none; }
 @media print {
     body * { visibility: hidden; }

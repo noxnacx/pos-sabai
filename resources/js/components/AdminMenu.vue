@@ -1,14 +1,10 @@
 <template>
-  <!-- ใช้ bg-slate-50 และปรับ Layout ให้รองรับ Sidebar -->
   <div class="min-h-screen bg-slate-50 font-sans">
 
-    <!-- 🟢 1. เรียกใช้ Sidebar ตรงนี้ -->
     <admin-sidebar></admin-sidebar>
 
-    <!-- 🟡 2. ส่วนเนื้อหาหลัก (ขยับขวา 64 หน่วย เพื่อหลบ Sidebar) -->
     <div class="lg:pl-64 transition-all duration-300">
 
-        <!-- Header (White Bar) -->
         <div class="bg-white border-b border-slate-200 sticky top-0 z-30">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
@@ -25,10 +21,8 @@
             </div>
         </div>
 
-        <!-- Content Area -->
         <div class="max-w-7xl mx-auto p-6 pb-20">
 
-          <!-- ตารางแสดงสินค้า (Card) -->
           <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
 
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
@@ -37,21 +31,19 @@
 
             <div class="overflow-x-auto">
                 <table class="table w-full">
-                  <!-- หัวตาราง -->
                   <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold tracking-wider">
                     <tr>
                       <th class="py-4 pl-6 w-20">รูปภาพ</th>
-                      <th>ชื่อเมนู / รหัส</th>
+                      <th>ชื่อเมนู / รายละเอียด</th>
                       <th>หมวดหมู่</th>
                       <th>ราคา</th>
-                      <th class="text-center">สถานะการขาย</th>
+                      <th class="text-center">สถานะ</th>
                       <th class="text-center w-32">จัดการ</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-100">
                     <tr v-for="product in products" :key="product.id" class="hover:bg-indigo-50/30 transition-colors group">
 
-                      <!-- รูป -->
                       <td class="pl-6 py-3">
                         <div class="avatar">
                           <div class="w-14 h-14 rounded-lg shadow-sm border border-slate-100 bg-white p-0.5">
@@ -63,31 +55,27 @@
                         </div>
                       </td>
 
-                      <!-- ชื่อ -->
                       <td>
                         <div class="font-bold text-slate-800 text-base group-hover:text-indigo-600 transition-colors">
                             {{ product.name }}
                         </div>
-                        <div class="text-xs text-slate-400 font-mono mt-0.5">
-                            SKU: {{ product.id.toString().padStart(4, '0') }}
+                        <div class="text-xs text-slate-400 font-mono mt-0.5 line-clamp-1">
+                            {{ product.description || '-' }}
                         </div>
                       </td>
 
-                      <!-- หมวดหมู่ -->
                       <td>
                         <span class="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
                             {{ product.category?.name || 'ไม่มีหมวด' }}
                         </span>
                       </td>
 
-                      <!-- ราคา -->
                       <td>
                         <div class="font-bold text-slate-700">
                             ฿{{ product.price }}
                         </div>
                       </td>
 
-                      <!-- สถานะ (Switch) -->
                       <td class="text-center">
                          <div class="flex flex-col items-center justify-center">
                              <input
@@ -96,13 +84,9 @@
                                 :checked="product.is_active"
                                 @change="toggleStatus(product)"
                              />
-                             <span :class="['text-[10px] mt-1 font-medium', product.is_active ? 'text-emerald-600' : 'text-slate-400']">
-                                {{ product.is_active ? 'พร้อมขาย' : 'ของหมด' }}
-                             </span>
                          </div>
                       </td>
 
-                      <!-- ปุ่มจัดการ -->
                       <td class="text-center">
                         <div class="flex justify-center gap-2">
                             <button
@@ -135,7 +119,6 @@
         </div>
     </div>
 
-    <!-- 🟦 Modal Form (ดีไซน์เดิม) -->
     <dialog class="modal backdrop-blur-sm" :class="{ 'modal-open': showModal }">
       <div class="modal-box w-11/12 max-w-lg bg-white p-0 overflow-hidden shadow-2xl rounded-2xl">
         <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
@@ -145,10 +128,9 @@
             </h3>
             <button @click="closeModal" class="btn btn-sm btn-circle btn-ghost text-slate-400 hover:text-slate-600">✕</button>
         </div>
-        <div class="p-6 space-y-5">
+        <div class="p-6 space-y-4">
           <form @submit.prevent="submitProduct">
 
-            <!-- ชื่อเมนู -->
             <div class="form-control w-full">
               <label class="label pt-0 pb-1">
                   <span class="label-text font-semibold text-slate-600">ชื่อเมนูอาหาร <span class="text-red-500">*</span></span>
@@ -156,19 +138,29 @@
               <input v-model="form.name" type="text" placeholder="เช่น ข้าวกะเพราหมูสับ" class="input input-bordered w-full bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" required />
             </div>
 
+            <div class="form-control w-full">
+              <label class="label pb-1">
+                  <span class="label-text font-semibold text-slate-600">รายละเอียด</span>
+              </label>
+              <textarea v-model="form.description" class="textarea textarea-bordered h-20 bg-white focus:border-indigo-500" placeholder="เช่น รสชาติจัดจ้าน, มีส่วนผสมของกุ้ง"></textarea>
+            </div>
+
             <div class="grid grid-cols-2 gap-4">
-                <!-- หมวดหมู่ -->
                 <div class="form-control w-full">
                   <label class="label pb-1">
                       <span class="label-text font-semibold text-slate-600">หมวดหมู่ <span class="text-red-500">*</span></span>
                   </label>
-                  <select v-model="form.category_id" class="select select-bordered w-full bg-white focus:border-indigo-500" required>
-                    <option value="" disabled>เลือกหมวด...</option>
-                    <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-                  </select>
+                  <div class="flex gap-2">
+                      <select v-model="form.category_id" class="select select-bordered w-full bg-white focus:border-indigo-500" required>
+                        <option value="" disabled>เลือกหมวด...</option>
+                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                      </select>
+                      <button type="button" @click="addNewCategory" class="btn btn-square btn-outline border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-indigo-600" title="เพิ่มหมวดใหม่">
+                          +
+                      </button>
+                  </div>
                 </div>
 
-                <!-- ราคา -->
                 <div class="form-control w-full">
                   <label class="label pb-1">
                       <span class="label-text font-semibold text-slate-600">ราคา (บาท) <span class="text-red-500">*</span></span>
@@ -182,19 +174,13 @@
                 </div>
             </div>
 
-            <!-- รูปภาพ -->
             <div class="form-control w-full">
               <label class="label pb-1">
                   <span class="label-text font-semibold text-slate-600">รูปภาพประกอบ</span>
               </label>
               <input @change="handleFileUpload" type="file" accept="image/*" class="file-input file-input-bordered file-input-primary w-full bg-white text-slate-500" />
-              <div class="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
-                  แนะนำไฟล์ .jpg หรือ .png ขนาดไม่เกิน 2MB
-              </div>
             </div>
 
-            <!-- Action Buttons -->
             <div class="mt-8 flex gap-3 justify-end">
               <button type="button" @click="closeModal" class="btn btn-ghost text-slate-500 hover:bg-slate-100">ยกเลิก</button>
               <button type="submit" class="btn bg-indigo-600 hover:bg-indigo-700 text-white border-none px-6" :disabled="loading">
@@ -217,7 +203,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
-import AdminSidebar from './AdminSidebar.vue'; // 🟢 Import Sidebar เข้ามาใช้แบบ Local
+import AdminSidebar from './AdminSidebar.vue';
 
 const products = ref([]);
 const categories = ref([]);
@@ -228,12 +214,12 @@ const isEditing = ref(false);
 const form = ref({
     id: null,
     name: '',
+    description: '', // ✅ เพิ่ม
     price: '',
     category_id: '',
     image: null
 });
 
-// ... (ฟังก์ชัน fetchInitialData, submitProduct, deleteProduct, toggleStatus เหมือนเดิมทุกประการ) ...
 const fetchInitialData = async () => {
     try {
         const [prodRes, catRes] = await Promise.all([
@@ -245,13 +231,33 @@ const fetchInitialData = async () => {
     } catch(e) { console.error(e); }
 }
 
+// ✅ ฟังก์ชันเพิ่มหมวดหมู่ใหม่ (แบบ Quick Add)
+const addNewCategory = async () => {
+    const newCatName = prompt("กรุณากรอกชื่อหมวดหมู่ใหม่:");
+    if (newCatName) {
+        try {
+            const res = await axios.post('/api/admin/categories', { name: newCatName });
+            categories.value.push(res.data); // อัปเดต list ทันที
+            form.value.category_id = res.data.id; // เลือกตัวใหม่ให้อัตโนมัติ
+            alert(`เพิ่มหมวด "${newCatName}" เรียบร้อย`);
+        } catch (e) {
+            alert('เพิ่มหมวดหมู่ไม่สำเร็จ (ชื่ออาจซ้ำ)');
+        }
+    }
+}
+
 const openModal = (product = null) => {
     if (product) {
         isEditing.value = true;
-        form.value = { ...product, image: null };
+        // ✅ เพิ่ม description เข้าไปใน form
+        form.value = {
+            ...product,
+            description: product.description || '',
+            image: null
+        };
     } else {
         isEditing.value = false;
-        form.value = { name: '', price: '', category_id: '', image: null };
+        form.value = { name: '', description: '', price: '', category_id: '', image: null };
     }
     showModal.value = true;
 }
@@ -266,6 +272,9 @@ const submitProduct = async () => {
         formData.append('name', form.value.name);
         formData.append('price', form.value.price);
         formData.append('category_id', form.value.category_id);
+        // ✅ ส่ง description ไปด้วย
+        formData.append('description', form.value.description);
+
         if (form.value.image) formData.append('image', form.value.image);
 
         if (isEditing.value) await axios.post(`/api/products/${form.value.id}`, formData);
