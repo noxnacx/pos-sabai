@@ -13,16 +13,15 @@
 - 🔑 **Role Management:** แบ่งสิทธิ์การใช้งานระหว่าง เจ้าของร้าน, แคชเชียร์ และพนักงานครัว
 
 ## 📸 ตัวอย่างหน้าตาโปรแกรม
-*(แนะนำให้แคปรูปหน้าจอมาใส่ตรงนี้ครับ)*
-| Sale Screen | Inventory |
-|---|---|
-| <img src="screenshot-pos.png" width="400"> | <img src="screenshot-stock.png" width="400"> |
+<img width="1915" height="922" alt="image" src="https://github.com/user-attachments/assets/e40b8c0f-41f1-4861-ba61-294c57fc024e" />
+<img width="1672" height="743" alt="image" src="https://github.com/user-attachments/assets/65092b93-712c-4de6-890b-2c170c43e33a" />
+<img width="1681" height="919" alt="image" src="https://github.com/user-attachments/assets/660c2bee-9dff-409b-8221-9833ea38a676" />
+
 
 ## 🛠 Tech Stack
 - **Backend:** Laravel (PHP)
 - **Frontend:** Vue.js + Tailwind CSS
 - **Database:** PostgreSQL / MySQL
-- **State Management:** Pinia (หรือ Vuex)
 
 ## 🚀 การติดตั้ง (Installation)
 1. `git clone https://github.com/noxnacx/pos-sabai.git`
